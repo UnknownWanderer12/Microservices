@@ -1,0 +1,297 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.cognizant.banking</groupId>
+  <artifactId>bankingbeanlifecycle</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+<!-- For bean factory -->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-core</artifactId>
+    <version>7.0.3</version>
+    <scope>compile</scope>
+</dependency>
+<!-- For application context -->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-context</artifactId>
+    <version>7.0.3</version>
+    <scope>compile</scope>
+</dependency>
+<!-- Logger info-->
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-api</artifactId>
+    <version>2.0.12</version>
+</dependency>
+
+<!-- Choose a logging implementation, e.g. Logback -->
+<dependency>
+    <groupId>ch.qos.logback</groupId>
+    <artifactId>logback-classic</artifactId>
+    <version>1.5.6</version>
+</dependency>
+
+
+<!-- For adding boilerplates -->
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.42</version>
+    <scope>compile</scope>
+</dependency>
+
+<!-- For fake datas for spring -->
+<dependency>
+    <groupId>com.github.javafaker</groupId>
+    <artifactId>javafaker</artifactId>
+    <version>1.0.2</version>
+    <scope>compile</scope>
+</dependency>
+
+<!-- Source: https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api -->
+<dependency>
+    <groupId>jakarta.annotation</groupId>
+    <artifactId>jakarta.annotation-api</artifactId>
+    <version>3.0.0</version>
+    <scope>compile</scope>
+</dependency>
+
+  </dependencies>
+   <build>
+  <plugins>
+  <plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-compiler-plugin</artifactId>
+  <version>3.14.1</version>
+  <configuration>
+  <source>21</source>
+  <target>21</target>
+  </configuration>
+  </plugin>
+  </plugins>
+  </build>
+  
+</project>
+
+
+package com.cognizant.banking.utils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.PropertySource;
+
+import com.cognizant.banking.configurations.AppConfig;
+import com.cognizant.banking.models.Customer;
+//@PropertySource("classpath:comapplication.properties")
+public class CustomerApp {
+
+	public static void main(String[] args) {
+		
+		Logger logger = LoggerFactory.getLogger(CustomerApp.class);
+		
+		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+		
+		Customer customer = context.getBean(Customer.class);
+		
+		System.out.println(customer);
+		
+		logger.info("Customer Deatils "+customer);
+		
+		context.close();
+		
+
+	}
+
+}
+
+
+package com.cognizant.banking.models;
+
+
+
+import org.slf4j.Logger;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import jakarta.annotation.PreDestroy;
+
+
+
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Slf4j
+
+public class Customer implements BeanNameAware, BeanFactoryAware, ApplicationContextAware,InitializingBean,DisposableBean {
+	
+	protected long accountNumber;
+	
+	Logger logger = org.slf4j.LoggerFactory.getLogger(Customer.class);
+	
+	
+	protected FullName fullName;
+	
+	
+	protected Address address;
+	
+	protected long contactNo;
+	protected String email;
+	protected String password;
+	@Override
+	public void destroy() throws Exception {
+		logger.info("Customer bean is destroyed");
+		
+	}
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		logger.info("Customer Bean is Initialised");
+		
+	}
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		logger.info("Application context is set in Customer bean "+applicationContext.getApplicationName());
+		
+	}
+	@Override
+	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+		logger.info("Bean factory is set in Customer Bean "+beanFactory.getClass().getName());
+		
+	}
+	@Override
+	public void setBeanName(String name) {
+		logger.info("Bean name is set in the Customer bean "+name);
+		
+	} 
+	public void customInit() {
+		logger.info("Custom Init method called for customer bean");
+	}
+	public void customDestroy() {
+		logger.info("Custom destroy method called for the Customer Bean");
+	}
+	
+
+		
+	
+    @PreDestroy
+    public void onDestroy() {
+        log.info("Customer bean is being destroyed");
+    }
+
+
+	
+	
+}
+package com.cognizant.banking.models;
+
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+
+@Scope("prototype")
+@Qualifier("homeAddress")
+public class Address {
+	
+	private String doorName;
+	private String streetName;
+	private String city;
+	private 	Long pinCode;
+	
+}
+package com.cognizant.banking.configurations;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+
+import com.cognizant.banking.models.Address;
+import com.cognizant.banking.models.Customer;
+import com.cognizant.banking.models.FullName;
+import com.github.javafaker.Faker;
+
+@Configuration
+@ComponentScan(basePackages = "com.cognizant.banking")
+public class AppConfig {
+	
+	@Bean
+	public CustomerBeanPostProcessor customerBeanPostProcessor() {
+		return new CustomerBeanPostProcessor();
+	}
+	
+	
+	@Bean(initMethod = "customInit", destroyMethod = "customDestroy")
+	
+	
+	
+	
+	public Customer customer() {
+		Faker faker = new Faker();
+		Customer customer = new Customer();
+		customer.setAccountNumber(faker.number().numberBetween(10000000, 100000000L));
+		customer.setContactNo(faker.number().numberBetween(6000000L, 32232323L));
+		customer.setEmail(faker.internet().emailAddress());
+		customer.setPassword(faker.internet().password());
+		FullName fullName = new FullName();
+		fullName.setFirstName(faker.name().firstName());
+		fullName.setLastName(faker.name().lastName());
+		customer.setFullName(fullName);
+		Address address = new Address();
+		address.setStreetName(faker.address().streetAddress());
+		address.setCity(faker.address().city());
+		address.setDoorName(faker.address().buildingNumber());
+		address.setPinCode(faker.number().randomNumber());
+		customer.setAddress(address);
+		return customer;
+	}
+}
+package com.cognizant.banking.configurations;
+
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+
+import com.cognizant.banking.models.Customer;
+
+
+public class CustomerBeanPostProcessor implements BeanPostProcessor{
+	 
+	Logger logger = org.slf4j.LoggerFactory.getLogger(CustomerBeanPostProcessor.class);
+	@Override
+	public @Nullable Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		if(bean instanceof Customer) {
+			logger.info("Before Initialised: {} "+beanName);
+	}
+		return bean;
+	}
+
+	@Override
+	public @Nullable Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+		if(bean instanceof Customer) {
+			logger.info("After Initialised :{} "+beanName);
+	}
+		return bean;
+	}
+	
+}
